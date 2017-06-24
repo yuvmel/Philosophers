@@ -22,15 +22,18 @@ public class Chopstick {
     public synchronized void pickUp() {
         while (isUp) {
             try {
+                System.out.println("Waiting for chopstick " + id + " ...");
                 wait();
             } catch (InterruptedException e) {
             }
         }
         isUp = true;
+        System.out.println("Chopstick up: " + id);
     }
 
     public synchronized void putDown() {
         isUp = false;
+        System.out.println("Chopstick down: " + id);
         notifyAll();
     }
 }

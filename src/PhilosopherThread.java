@@ -8,7 +8,7 @@ import java.util.Random;
  *
  * @author yuval.melamed
  */
-public class PhilosopherThread implements Runnable {
+public class PhilosopherThread extends Thread {
 
     private static final int MAX_MSEC_FOR_ACTION = 3000;
     private final Random random = new Random();
@@ -47,6 +47,7 @@ public class PhilosopherThread implements Runnable {
 
     public void setDone() {
         done = true;
+        this.interrupt();
     }
 
     @Override

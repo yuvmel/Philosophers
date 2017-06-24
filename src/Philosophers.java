@@ -8,11 +8,25 @@
  */
 public class Philosophers {
 
+    private static final int COUNT = 5;
+
     /**
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-        // TODO code application logic here
+        Chopstick[] chopstick = new Chopstick[COUNT];
+        PhilosopherThread[] philosopher = new PhilosopherThread[COUNT];
+        int i;
+
+        for (i = 0; i < COUNT; i++) {
+            chopstick[i] = new Chopstick(i + 1);
+        }
+
+        for (i = 0; i < COUNT; i++) {
+            philosopher[i] = new PhilosopherThread(i + 1,
+                    chopstick[i], chopstick[(i + 1) % COUNT]);
+            philosopher[i].start();
+        }
     }
 
 }
