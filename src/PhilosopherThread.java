@@ -6,24 +6,27 @@ import java.util.Random;
 import javax.swing.JPanel;
 
 /**
+ * Represents a philosopher as an independent thread
  *
  * @author yuval.melamed
  */
-public class PhilosopherThread extends Thread {
+public class PhilosopherThread implements Runnable {
 
-    private static final int MAX_MSEC_FOR_ACTION = 3000;
-    private final Random random = new Random();
-    private boolean done = false;
+    private static final int MAX_MSEC_TO_EAT_OR_THINK = 3000;
+
     private final int id;
-    private JPanel panel;
-    private PhilosopherStat stat = PhilosopherStat.HUNGRY;
-
-    private final Chopstick firstChopstick, secondChopstick;
+    private final JPanel panel; // might be used for painting the state
+    private final ChopstickMonitor firstChopstick, secondChopstick;
+    private final Random random = new Random();
+    private PhilosopherStat stat;
+    private boolean done = false;
 
     public PhilosopherThread(int id, JPanel panel,
-            Chopstick leftChopstick, Chopstick rightChopstick) {
+            ChopstickMonitor leftChopstick, ChopstickMonitor rightChopstick) {
         this.id = id;
         this.panel = panel;
+
+        // Avoid dead-locks by having the chopstick with lower ID as first
         if (leftChopstick.getId() < rightChopstick.getId()) {
             firstChopstick = leftChopstick;
             secondChopstick = rightChopstick;
@@ -33,33 +36,39 @@ public class PhilosopherThread extends Thread {
         }
     }
 
+    // Change philosopher's state & optionally update graphics
     public void setStat(PhilosopherStat stat) {
         this.stat = stat;
-        panel.repaint();
+        if (panel != null) {
+            panel.repaint();
+        }
     }
 
-    private void act() {
+    // Generic "action" method, used for sleeping while philosopher eats/thinks
+    private void act(String action) {
+        if (done) {
+            return;
+        }
+        System.out.println(action);
         try {
-            Thread.sleep(random.nextInt(MAX_MSEC_FOR_ACTION));
+            Thread.sleep(random.nextInt(MAX_MSEC_TO_EAT_OR_THINK));
         } catch (InterruptedException e) {
+            // Random sleep anyway, so OK to give up if interrupted
         }
     }
 
     private void eat() {
         setStat(PhilosopherStat.EATING);
-        System.out.println("Philosopher " + id + " is eating...");
-        act();
+        act("Philosopher " + id + " is eating...");
     }
 
     private void think() {
         setStat(PhilosopherStat.THINKING);
-        System.out.println("Philosopher " + id + " is thinking...");
-        act();
+        act("Philosopher " + id + " is thinking...");
     }
 
     public void setDone() {
         done = true;
-        this.interrupt();
     }
 
     public PhilosopherStat getStat() {
@@ -68,15 +77,21 @@ public class PhilosopherThread extends Thread {
 
     @Override
     public void run() {
+
+        // Main philosopher loop
         while (!done) {
             setStat(PhilosopherStat.HUNGRY);
+
             firstChopstick.pickUp();
             secondChopstick.pickUp();
             eat();
             secondChopstick.putDown();
             firstChopstick.putDown();
+
             think();
         }
+
+        System.out.println("Philosopher " + id + " is done!");
     }
 
     public enum PhilosopherStat {
